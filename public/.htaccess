@@ -1,0 +1,18 @@
+# public/.htaccess - Configuración de seguridad para el DocumentRoot público
+
+# Desactivar listado de directorios
+Options -Indexes
+
+# Cabeceras de seguridad HTTP
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Bloquear acceso a archivos ocultos o de control de versiones
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

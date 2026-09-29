@@ -1,0 +1,15 @@
+# .htaccess raíz - Protección de archivos privados y de configuración
+
+Options -Indexes
+
+# Bloquear acceso a archivos sensibles
+<FilesMatch "^\.env|\.sqlite|\.json$|\.txt$|\.bat$|\.log$|\.md$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Proteger carpetas privadas
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(backend|data|prompts)/ - [F,L,NC]
+</IfModule>

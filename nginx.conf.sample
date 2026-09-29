@@ -1,0 +1,63 @@
+# nginx.conf.sample - Configuración recomendada para Nginx en Producción
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name tu-dominio.com www.tu-dominio.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name tu-dominio.com www.tu-dominio.com;
+
+    # Certificados SSL (Let's Encrypt / Certbot)
+    ssl_certificate /etc/letsencrypt/live/tu-dominio.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tu-dominio.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # IMPORTANTE: El DocumentRoot apunta exclusivamente a la carpeta public/
+    # Esto deja el archivo .env, backend/ y data/ fuera del alcance web
+    root /var/www/chatbot/public;
+    index index.php index.html;
+
+    # Cabeceras de seguridad
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Limitar tamaño de subida
+    client_max_body_size 2M;
+
+    # Procesar archivos PHP con PHP-FPM
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock; # Ajustar según versión de PHP instalada
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_intercept_errors off;
+        fastcgi_buffer_size 16k;
+        fastcgi_buffers 4 16k;
+    }
+
+    # Bloquear acceso a archivos ocultos (como .git o .env)
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Archivos estáticos con caché
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg)$ {
+        expires 7d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # Ruta por defecto
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+}
