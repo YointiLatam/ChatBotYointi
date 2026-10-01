@@ -32,7 +32,23 @@ function loadEnv($path) {
     return $env;
 }
 
-$envVars = loadEnv(dirname(__DIR__) . '/.env');
+/**
+ * Locates the .env file. A copy one level above the project root wins because, on shared
+ * hosting, that folder sits outside the web root (public_html) and no URL can reach it.
+ * The copy inside the project root stays as the fallback (local development).
+ */
+function findEnvFile($projectRoot) {
+    $projectRoot = rtrim($projectRoot, '/\\');
+    $candidates = [dirname($projectRoot) . '/.env', $projectRoot . '/.env'];
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate) && is_readable($candidate)) {
+            return $candidate;
+        }
+    }
+    return $projectRoot . '/.env';
+}
+
+$envVars = loadEnv(findEnvFile(dirname(__DIR__)));
 
 function env($key, $default = null) {
     global $envVars;
