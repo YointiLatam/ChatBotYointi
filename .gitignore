@@ -23,3 +23,12 @@ Thumbs.db
 *.bak
 *.backup
 *.old
+
+# Internal tooling and working notes (not part of the product)
+.codegraph/
+.atl/
+.claude/
+CLAUDE.md
+AGENTS.md
+REVISION_CHATBOT.md
+odd/

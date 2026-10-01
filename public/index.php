@@ -9,7 +9,7 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
   <title>YOINTI LATAM — Soluciones Digitales & Asistente Virtual</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -239,6 +239,8 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
        ÁREA DEL BOTÓN FLOTANTE Y CHATBOT MODAL (MODELO 2)
        ============================================================ */
     .flotante-widget-area {
+      --accent-gold: #ffb602;
+      --accent-gold-hover: #e6a400;
       position: fixed;
       bottom: 24px;
       right: 24px;
@@ -248,9 +250,12 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       gap: 12px;
     }
 
+    /* El botón flotante se oculta mientras el modal está abierto (evita solaparse con el composer) */
+    body.chat-open .flotante-widget-area { display: none; }
+
     /* Píldora / Barra interactiva que acompaña al botón */
     .chat-pill-invite {
-      background: #0f172a;
+      background: #1f123a;
       color: #ffffff;
       padding: 10px 18px;
       border-radius: 30px;
@@ -261,15 +266,15 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       align-items: center;
       gap: 10px;
       cursor: pointer;
-      border: 1.5px solid rgba(245, 158, 11, 0.4);
+      border: 1px solid rgba(255, 182, 2, 0.4);
       transition: all 0.25s ease;
       animation: floatPill 3.5s ease-in-out infinite;
       user-select: none;
     }
     .chat-pill-invite:hover {
       transform: translateY(-2px);
-      border-color: #f59e0b;
-      box-shadow: 0 12px 32px rgba(245, 158, 11, 0.25);
+      border-color: var(--accent-gold);
+      box-shadow: 0 12px 32px rgba(255, 182, 2, 0.22);
     }
     @keyframes floatPill {
       0%, 100% { transform: translateY(0); }
@@ -283,7 +288,7 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       animation: pulseGreen 1.8s infinite;
     }
     .chat-pill-invite strong {
-      color: #f59e0b;
+      color: var(--accent-gold);
     }
     .pill-close-btn {
       background: none;
@@ -301,8 +306,8 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       width: 64px;
       height: 64px;
       border-radius: 50%;
-      background: #0b132b;
-      border: 3px solid #f59e0b;
+      background: #1f123a;
+      border: 2px solid var(--accent-gold);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       display: flex;
       align-items: center;
@@ -315,7 +320,7 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
     }
     .btn-toggle-flotante:hover {
       transform: scale(1.08);
-      box-shadow: 0 12px 35px rgba(245, 158, 11, 0.4);
+      box-shadow: 0 12px 35px rgba(255, 182, 2, 0.28);
     }
     .flotante-logo {
       width: 38px;
@@ -338,18 +343,30 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
 
     /* CONTENEDOR MODAL DEL CHATBOT (MODELO 2 — MODO OSCURO PREMIUM) */
     .chatbot-floating-modal {
+      --bg-dark: #100a1f;
+      --card-bg: #1f123a;
+      --card-bg-glass: rgba(31, 18, 58, 0.97);
+      --primary-blue: #1f123a;
+      --accent-gold: #ffb602;
+      --accent-gold-hover: #e6a400;
+      --bubble-bot: #291c43;
+      --bubble-user: rgba(255, 182, 2, 0.16);
+      --bubble-user-border: rgba(255, 182, 2, 0.45);
+      --glass-border: rgba(255, 255, 255, 0.12);
       position: fixed;
-      bottom: 100px;
+      bottom: 96px;
       right: 24px;
-      width: 420px;
+      width: 400px;
       max-width: calc(100vw - 32px);
-      height: 650px;
-      max-height: calc(100vh - 120px);
+      /* Fit the content and grow with the conversation up to the cap, instead of leaving an empty stream. */
+      height: auto;
+      min-height: min(360px, calc(100dvh - 32px));
+      max-height: min(680px, calc(100dvh - 128px));
       background: var(--card-bg-glass);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border-radius: 24px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(245, 158, 11, 0.08);
+      border-radius: 18px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -358,6 +375,7 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       color: var(--text-main);
       transform-origin: bottom right;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overscroll-behavior: contain;
     }
     .chatbot-floating-modal.hidden {
       opacity: 0;
@@ -368,59 +386,61 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
 
     /* ENCABEZADO DEL MODAL */
     .modal-header {
-      padding: 13px 18px;
-      background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.75) 100%);
+      padding: 10px 15px;
+      background: rgba(31, 18, 58, 0.98);
       border-bottom: 1px solid var(--glass-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
+      flex: 0 0 auto;
     }
     .modal-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
+      min-width: 0;
     }
     .modal-brand-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, #1e293b, #070a0f);
-      border: 1px solid rgba(245, 158, 11, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent-gold);
-      font-weight: 800;
-      font-size: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      flex: 0 0 auto;
     }
     .modal-brand-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
       color: #ffffff;
       letter-spacing: -0.4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+    .modal-brand-copy { min-width: 0; }
     .modal-header-actions {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex: 0 0 auto;
     }
     .header-badge {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      color: #34d399;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      padding: 4px 10px;
+      color: #f4f0fb;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      padding: 5px 9px;
       border-radius: 20px;
       display: flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .header-badge.warning {
-      color: #fbbf24;
-      background: rgba(245, 158, 11, 0.15);
-      border-color: rgba(245, 158, 11, 0.35);
+      color: #ffe08a;
+      background: rgba(255, 182, 2, 0.13);
+      border-color: rgba(255, 182, 2, 0.34);
     }
     .header-badge.exhausted {
       color: #f87171;
@@ -430,12 +450,10 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
     .btn-close-modal {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid var(--glass-border);
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      color: #94a3b8;
-      font-size: 15px;
-      font-weight: bold;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      color: #f4f0fb;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -447,41 +465,14 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       color: #ffffff;
     }
 
-    /* CONSULTANT STRIP */
-    .consultant-strip {
-      padding: 10px 18px;
-      background: rgba(15, 23, 42, 0.7);
-      border-bottom: 1px solid var(--glass-border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .consultant-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .consultant-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid var(--accent-gold);
-      object-fit: cover;
-      box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
-    }
-    .consultant-text { line-height: 1.25; }
-    .consultant-title {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #ffffff;
-    }
+    /* Compact availability status within the modal header. */
     .online-indicator {
-      font-size: 11px;
+      font-size: 10.5px;
       color: #34d399;
       display: flex;
       align-items: center;
       gap: 5px;
-      margin-top: 2px;
+      margin-top: 3px;
       font-weight: 600;
     }
     .pulse-dot {
@@ -496,35 +487,27 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
       100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
-    .speed-tag {
-      font-size: 10.5px;
-      background: rgba(56, 189, 248, 0.12);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.28);
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-    }
-
     /* CHAT STREAM */
     .hub-stream {
-      flex: 1;
-      padding: 14px;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px 15px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      background: #070a0f;
+      background: #160d27;
       scroll-behavior: smooth;
+      overscroll-behavior: contain;
     }
     .hub-stream::-webkit-scrollbar { width: 5px; }
-    .hub-stream::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); border-radius: 4px; }
+    .hub-stream::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); border-radius: 4px; }
 
     .msg-box {
       max-width: 90%;
       display: flex;
       flex-direction: column;
+      min-width: 0;
       animation: fadeInMsg 0.2s ease-out;
     }
     @keyframes fadeInMsg {
@@ -532,6 +515,8 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       to { opacity: 1; transform: translateY(0); }
     }
     .msg-box.bot { align-self: flex-start; }
+    /* The welcome message hosts the service carousel; let it use the full stream width. */
+    .msg-box.bot:has(> .cards-carousel) { max-width: 100%; align-self: stretch; }
     .msg-box.user { align-self: flex-end; }
 
     .msg-sender {
@@ -546,18 +531,19 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
     .msg-box.user .msg-sender { text-align: right; justify-content: flex-end; }
 
     .msg-bubble {
-      padding: 12px 16px;
-      border-radius: 16px;
-      font-size: 13.5px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13px;
       line-height: 1.55;
       word-break: break-word;
+      overflow-wrap: anywhere;
     }
     .msg-box.bot .msg-bubble {
       background: var(--bubble-bot);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-bottom-left-radius: 4px;
       color: #f1f5f9;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
     }
     .msg-box.bot .msg-bubble strong {
       color: #ffffff;
@@ -567,69 +553,67 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       border: 1px solid var(--bubble-user-border);
       color: #ffffff;
       border-bottom-right-radius: 4px;
-      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12);
+      box-shadow: 0 2px 8px rgba(255, 182, 2, 0.06);
     }
 
     /* CARRUSEL DE SERVICIOS */
     .cards-carousel {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       overflow-x: auto;
-      padding: 8px 2px;
-      margin-top: 8px;
+      padding: 5px 2px 6px;
+      margin-top: 5px;
+      max-width: 100%;
       scroll-snap-type: x mandatory;
     }
     .cards-carousel::-webkit-scrollbar { display: none; }
     .service-card {
-      min-width: 165px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      padding: 12px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      min-width: 146px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 11px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       scroll-snap-align: start;
-      transition: all 0.25s ease;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
     }
     .service-card:hover {
-      border-color: rgba(245, 158, 11, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 15px rgba(245, 158, 11, 0.1);
+      border-color: rgba(255, 182, 2, 0.5);
+      background: rgba(255, 255, 255, 0.055);
     }
-    .card-icon { font-size: 22px; margin-bottom: 6px; }
-    .card-title { font-size: 12.5px; font-weight: 700; color: #ffffff; margin-bottom: 3px; }
-    .card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.35; margin-bottom: 8px; flex: 1; }
-    .card-price { font-size: 10.5px; font-weight: 800; color: var(--accent-gold); margin-bottom: 8px; }
+    .card-icon { display: flex; color: var(--accent-gold); margin-bottom: 6px; }
+    .card-title { font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 3px; }
+    .card-desc { font-size: 10.5px; color: var(--text-muted); line-height: 1.4; margin-bottom: 7px; flex: 1; }
+    .card-price { font-size: 10px; font-weight: 700; color: var(--accent-gold); margin-bottom: 7px; }
     .btn-card-action {
       background: rgba(255, 255, 255, 0.07);
       color: #f8fafc;
       border: 1px solid var(--glass-border);
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 7px;
+      font-size: 10.5px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
     }
     .btn-card-action:hover {
       background: var(--accent-gold);
-      color: #070a0f;
+      color: #1f123a;
       border-color: var(--accent-gold);
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+      box-shadow: none;
     }
 
     /* TARJETA DESTACADA WHATSAPP */
     .wa-cta-box {
-      background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
-      border: 1px solid rgba(37, 211, 102, 0.4);
-      border-radius: 14px;
-      padding: 14px;
-      margin-top: 8px;
+      background: rgba(31, 18, 58, 0.98);
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      border-radius: 11px;
+      padding: 11px;
+      margin-top: 6px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      gap: 8px;
     }
     .wa-cta-header {
       display: flex;
@@ -637,55 +621,77 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       gap: 10px;
     }
     .wa-badge-icon {
-      width: 34px;
-      height: 34px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background: var(--wa-green);
-      color: #070a0f;
+      color: #1f123a;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      font-weight: 800;
       flex-shrink: 0;
-      box-shadow: 0 0 12px rgba(37, 211, 102, 0.4);
+      box-shadow: none;
     }
-    .wa-cta-title { font-size: 13px; font-weight: 800; color: #4ade80; }
+    .wa-cta-title { font-size: 13px; font-weight: 800; color: #b8f6cc; }
     .wa-cta-sub { font-size: 11.5px; color: var(--text-muted); line-height: 1.3; }
     .btn-wa-action {
       background: var(--wa-green);
-      color: #070a0f;
+      color: #102317;
       text-decoration: none;
       font-size: 12.5px;
       font-weight: 800;
-      padding: 10px 14px;
+      padding: 8px 12px;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
       transition: all 0.2s;
-      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+      box-shadow: none;
     }
     .btn-wa-action:hover {
-      background: #22c55e;
-      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+      background: #34d27a;
+      box-shadow: none;
     }
 
     /* ACCESO WHATSAPP EN PIE DE WIDGET */
-    .wa-strip {
-      padding: 8px 14px;
-      background: rgba(15, 23, 42, 0.9);
+    .hub-dock {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(31, 18, 58, 0.99);
       border-top: 1px solid var(--glass-border);
+      flex: 0 0 auto;
+    }
+    .wa-strip { flex: 0 0 auto; }
+    /* Exhausted quota: WhatsApp is the only next step, so hide the unusable composer
+       and promote the WhatsApp button instead of showing a clipped disabled field. */
+    .hub-limit-note {
+      display: none;
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #fca5a5;
+      text-align: center;
+    }
+    .hub-dock:has(.hub-composer.locked) .hub-limit-note { display: block; }
+    .hub-dock:has(.hub-composer.locked) .hub-footer { display: none; }
+    .hub-dock:has(.hub-composer.locked) .btn-wa-hero {
+      background: var(--wa-green);
+      border-color: var(--wa-green);
+      color: #102317;
+      font-size: 13px;
+      padding: 11px 12px;
     }
     .btn-wa-hero {
       background: rgba(37, 211, 102, 0.12);
       border: 1px solid rgba(37, 211, 102, 0.35);
-      color: #4ade80;
+      color: #b8f6cc;
       text-decoration: none;
-      padding: 7px 12px;
-      border-radius: 10px;
-      font-size: 11.5px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -695,98 +701,223 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
     }
     .btn-wa-hero:hover {
       background: var(--wa-green);
-      color: #070a0f;
+      color: #102317;
       border-color: var(--wa-green);
-      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+      box-shadow: none;
     }
 
     /* CHIPS DE CONSULTA */
-    .quick-chips-wrap {
+    .quick-chips-section { flex: 0 0 auto; min-width: 0; }
+    .quick-chips-heading {
       display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding: 8px 14px;
-      background: rgba(15, 23, 42, 0.9);
-      border-top: 1px solid var(--glass-border);
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+      color: #c8bddc;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
-    .quick-chips-wrap::-webkit-scrollbar { display: none; }
+    .quick-chips-heading span { color: #f4f0fb; }
+    /* All suggestions are visible at once: a 2x2 grid instead of a hidden horizontal scroll. */
+    .quick-chips-wrap {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
     .hub-chip {
       white-space: nowrap;
+      min-width: 0;
+      overflow: hidden;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--glass-border);
-      padding: 5px 12px;
-      border-radius: 14px;
-      font-size: 11.5px;
+      padding: 0 10px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 10.5px;
       font-weight: 600;
       color: #cbd5e1;
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
+    .hub-chip span { overflow: hidden; text-overflow: ellipsis; }
     .hub-chip:hover {
-      background: rgba(245, 158, 11, 0.18);
+      background: rgba(255, 182, 2, 0.14);
       color: #ffffff;
       border-color: var(--accent-gold);
     }
+    .hub-chip:focus-visible,
+    .btn-card-action:focus-visible,
+    .btn-wa-action:focus-visible,
+    .btn-wa-hero:focus-visible {
+      outline: 3px solid var(--accent-gold);
+      outline-offset: 2px;
+    }
 
     /* FOOTER INPUT */
-    .hub-footer {
-      padding: 12px 14px;
-      background: rgba(15, 23, 42, 0.95);
-      border-top: 1px solid var(--glass-border);
+    .hub-footer { flex: 0 0 auto; }
+    /* WhatsApp-style composer: a rounded field that grows with the text and a round send
+       button outside it, aligned to the last line. Counter/hint get a slim row only when shown. */
+    .hub-composer {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
     }
     .hub-input-group {
+      flex: 1 1 auto;
+      min-width: 0;
       display: flex;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.4);
+      flex-direction: column;
+      background: rgba(15, 8, 29, 0.72);
       border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      padding: 4px 6px 4px 14px;
-      transition: all 0.2s;
+      border-radius: 22px;
+      padding: 0 16px;
+      transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
     }
     .hub-input-group:focus-within {
-      border-color: var(--accent-gold);
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
-      background: rgba(0, 0, 0, 0.55);
+      border-color: rgba(255, 182, 2, 0.7);
+      box-shadow: 0 0 0 2px rgba(255, 182, 2, 0.12);
+      background: rgba(15, 8, 29, 0.9);
     }
-    .hub-input-group.locked {
+    .hub-composer.locked .hub-input-group {
       background: rgba(239, 68, 68, 0.12);
       border-color: rgba(239, 68, 68, 0.35);
     }
     .hub-text-input {
-      flex: 1;
+      display: block;
+      width: 100%;
+      min-width: 0;
       border: none;
       background: transparent;
-      padding: 7px 0;
-      font-size: 13.5px;
+      padding: 10px 0;
+      font-size: 14.5px;
+      line-height: 1.4;
       outline: none;
       font-family: inherit;
       color: #ffffff;
+      resize: none;
+      height: auto;
+      /* About six lines, then it scrolls internally. */
+      max-height: 142px;
+      overflow-y: auto;
+      overflow-wrap: anywhere;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
     }
     .hub-text-input::placeholder {
-      color: #64748b;
+      color: #a99cc4;
     }
     .hub-text-input:disabled {
       color: #f87171;
       cursor: not-allowed;
     }
+    /* The field already shows focus via :focus-within; avoid a second inner outline. */
+    .chatbot-floating-modal .hub-text-input:focus-visible {
+      outline: none;
+    }
     .btn-hub-send {
-      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
-      color: #070a0f;
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      padding: 0;
       border: none;
-      padding: 8px 16px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 800;
+      border-radius: 50%;
+      background: var(--accent-gold);
+      color: #1f123a;
       cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, color 0.2s, transform 0.15s;
     }
-    .btn-hub-send:hover {
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      transform: scale(1.02);
-      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    .chatbot-floating-modal .btn-hub-send .chat-icon {
+      width: 19px;
+      height: 19px;
+      margin-left: 2px; /* Optically center the arrow. */
+      fill: currentColor;
     }
-    .btn-hub-send:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-hub-send:hover:not(:disabled) { background: #ffd05a; }
+    .btn-hub-send:active:not(:disabled) { transform: scale(0.94); }
+    .btn-hub-send:disabled {
+      background: rgba(255, 255, 255, 0.1);
+      color: #9a8fb3;
+      cursor: not-allowed;
+    }
+    .hub-meta {
+      display: none;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 0;
+      padding: 0 0 6px;
+      font-size: 11px;
+      line-height: 1.3;
+      color: #c8bddc;
+    }
+    .hub-input-group:has(.hub-counter:not([hidden]):not(:empty)) .hub-meta,
+    .hub-input-group:has(.hub-hint:not([hidden])) .hub-meta { display: flex; }
+    .hub-counter[data-level="2"] { color: var(--accent-gold); font-weight: 700; }
+    .hub-counter[data-level="3"] { color: #f87171; font-weight: 700; }
+    .hub-hint { color: var(--accent-gold); }
+
+    /* Error bubble retry action */
+    .btn-retry {
+      margin-top: 8px;
+      background: transparent;
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.6);
+      border-radius: 8px;
+      min-height: 32px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-retry:hover { background: rgba(248, 113, 113, 0.18); }
+    .btn-retry:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .chatbot-floating-modal :focus-visible,
+    .flotante-widget-area :focus-visible {
+      outline: 3px solid var(--accent-gold);
+      outline-offset: 3px;
+    }
+    .chatbot-floating-modal .chat-icon {
+      display: block;
+      width: 17px;
+      height: 17px;
+      flex: 0 0 auto;
+      color: currentColor;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .chatbot-floating-modal .chat-icon-sprite {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+    .chatbot-floating-modal .card-icon .chat-icon { width: 21px; height: 21px; }
+    .chatbot-floating-modal .msg-sender .chat-icon { width: 14px; height: 14px; }
+    .chatbot-floating-modal .wa-badge-icon .chat-icon { width: 18px; height: 18px; }
+    .chatbot-floating-modal .hub-chip .chat-icon { width: 14px; height: 14px; }
 
     .typing-ind {
       display: none;
@@ -868,45 +999,102 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
         left: 0;
         right: 0;
         bottom: 0;
-        width: 100vw;
-        max-width: 100vw;
-        height: 100dvh; /* Dynamic Viewport Height para adaptarse al teclado virtual de Android */
-        max-height: 100dvh;
-        background: #070a0f;
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        max-height: none;
+        padding-bottom: env(safe-area-inset-bottom);
+        background: #160d27;
         border-radius: 0;
         border: none;
         box-shadow: none;
         z-index: 999999;
       }
       .modal-header {
-        padding: 14px 16px;
+        padding: 10px 12px;
         padding-top: max(14px, env(safe-area-inset-top));
+        gap: 8px;
+      }
+      .modal-brand {
+        gap: 7px;
+      }
+      .modal-brand-icon { width: 26px; height: 26px; }
+      .modal-brand-title {
+        font-size: 13px;
+        letter-spacing: -0.25px;
+      }
+      .online-indicator {
+        font-size: 9px;
+        white-space: nowrap;
+      }
+      .modal-header-actions {
+        gap: 5px;
+        flex: 0 0 auto;
+      }
+      .header-badge {
+        font-size: 9px;
+        padding: 4px 6px;
       }
       .btn-close-modal {
-        width: 32px;
-        height: 32px;
-        font-size: 18px;
+        width: 44px;
+        height: 44px;
+        flex: 0 0 auto;
       }
-      .hub-stream {
-        padding: 12px 14px;
-      }
+      .hub-stream { padding: 10px 14px; }
       .msg-box {
         max-width: 92%;
       }
-      .msg-bubble {
-        font-size: 14px;
-        padding: 12px 15px;
-      }
-      .hub-footer {
-        padding: 10px 14px;
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
-      }
+      .msg-bubble { font-size: 14px; padding: 10px 14px; }
+      .hub-dock { padding: 8px 12px; }
       .hub-text-input {
-        font-size: 15px; /* Evita que el navegador móvil haga zoom al enfocar el input */
+        font-size: 16px; /* Prevents iOS zoom on focus. */
       }
-      .btn-hub-send {
-        padding: 10px 16px;
-        font-size: 12.5px;
+      .btn-hub-send { width: 44px; height: 44px; }
+      /* WhatsApp-like: short conversations sit at the bottom, close to the composer.
+         margin-top:auto (not justify-content:flex-end) keeps overflow scrolling intact. */
+      .hub-stream > :first-child { margin-top: auto; }
+      /* Give the conversation room while the keyboard is open. */
+      .hub-dock:has(.hub-text-input:focus) .quick-chips-section { display: none; }
+      .quick-chips-heading {
+        font-size: 9px;
+      }
+      .hub-chip { height: 36px; padding: 0 9px; }
+    }
+    @media (max-width: 360px) {
+      .online-indicator { display: none; }
+      .modal-header { padding-left: 9px; padding-right: 9px; }
+      .modal-brand-title { font-size: 12px; }
+      .header-badge { font-size: 9px; padding: 4px 7px; }
+      .header-badge .badge-long { display: none; }
+    }
+    /* Desktop/tablet: the floating button is hidden while the chat is open, so the panel can
+       use that space instead of floating above an empty gap. */
+    @media (min-width: 641px) {
+      body.chat-open .chatbot-floating-modal {
+        bottom: 24px;
+        max-height: min(720px, calc(100dvh - 48px));
+      }
+    }
+    /* Tablets: a roomier panel. */
+    @media (min-width: 641px) and (max-width: 1100px) {
+      .chatbot-floating-modal { width: 440px; }
+    }
+    @media (max-height: 560px) and (min-width: 641px) {
+      .chatbot-floating-modal {
+        bottom: 16px;
+        height: calc(100dvh - 32px);
+        max-height: calc(100dvh - 32px);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .chatbot-floating-modal *,
+      .flotante-widget-area * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
       }
     }
   </style>
@@ -991,68 +1179,107 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
 
   <!-- Contenedor Flotante del Chatbot (Modelo 2) -->
   <div class="chatbot-floating-modal hidden" id="chatbot-modal">
+    <!-- Selected Lucide SVGs from lucide-static@1.48.0 (ISC); no all-icons runtime bundle. -->
+    <svg class="chat-icon-sprite" aria-hidden="true" focusable="false">
+      <symbol id="yointi-icon-message-circle" viewBox="0 0 24 24">
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+      </symbol>
+      <symbol id="yointi-icon-close" viewBox="0 0 24 24">
+        <path d="m18 6-12 12M6 6l12 12" />
+      </symbol>
+      <symbol id="yointi-icon-palette" viewBox="0 0 24 24">
+        <path d="M12 22a2 2 0 0 1-2-2v-1.2a2 2 0 0 0-2-2H6.8A4.8 4.8 0 0 1 2 12C2 6.5 6.5 2 12 2s10 4.5 10 10-4.5 10-10 10Z" />
+        <circle cx="13.5" cy="6.5" r=".5" />
+        <circle cx="17.5" cy="10.5" r=".5" />
+        <circle cx="8.5" cy="7.5" r=".5" />
+        <circle cx="6.5" cy="12.5" r=".5" />
+      </symbol>
+      <symbol id="yointi-icon-code" viewBox="0 0 24 24">
+        <path d="m16 18 6-6-6-6M8 6l-6 6 6 6m6-14-4 16" />
+      </symbol>
+      <symbol id="yointi-icon-bot" viewBox="0 0 24 24">
+        <path d="M12 8V4H8" />
+        <rect x="4" y="8" width="16" height="12" rx="2" />
+        <path d="M2 14h2m16 0h2m-13-1v2m6-2v2" />
+      </symbol>
+      <symbol id="yointi-icon-trophy" viewBox="0 0 24 24">
+        <path d="M8 21h8m-4-4v4M7 4h10v4a5 5 0 0 1-10 0V4Z" />
+        <path d="M17 5h4v2a4 4 0 0 1-4 4M7 5H3v2a4 4 0 0 0 4 4" />
+      </symbol>
+      <symbol id="yointi-icon-trending-up" viewBox="0 0 24 24">
+        <path d="m22 7-8.5 8.5-5-5L2 17m14-10h6v6" />
+      </symbol>
+      <symbol id="yointi-icon-briefcase" viewBox="0 0 24 24">
+        <rect x="2" y="7" width="20" height="14" rx="2" />
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16M2 12h20" />
+      </symbol>
+      <symbol id="yointi-icon-users" viewBox="0 0 24 24">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </symbol>
+      <symbol id="yointi-icon-send" viewBox="0 0 24 24">
+        <path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z" />
+      </symbol>
+      <symbol id="yointi-icon-alert" viewBox="0 0 24 24">
+        <path d="m10.29 3.86-8.47 14.14A2 2 0 0 0 3.53 21h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+        <path d="M12 9v4m0 4h.01" />
+      </symbol>
+    </svg>
+
     <!-- Header -->
     <div class="modal-header">
       <div class="modal-brand">
-        <div class="modal-brand-icon">Y</div>
-        <div>
+        <img src="img/yointi_newlogo.png" alt="" aria-hidden="true" class="modal-brand-icon">
+        <div class="modal-brand-copy">
           <div class="modal-brand-title">YOINTI LATAM</div>
-        </div>
-      </div>
-      <div class="modal-header-actions">
-        <div id="badge-counter" class="header-badge" title="Límite de 15 consultas por IP al día">
-          <span id="counter-text">15 / 15 consultas</span>
-        </div>
-        <button class="btn-close-modal" id="btn-close-chat" title="Cerrar chat">&times;</button>
-      </div>
-    </div>
-
-    <!-- Consultant Strip -->
-    <div class="consultant-strip">
-      <div class="consultant-info">
-        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80" alt="Asistente Virtual" class="consultant-avatar">
-        <div class="consultant-text">
-          <div class="consultant-title">Asistente Virtual</div>
           <div class="online-indicator"><span class="pulse-dot"></span> En línea para ayudarte</div>
         </div>
       </div>
-      <div class="speed-tag">✓ Verificada</div>
+      <div class="modal-header-actions">
+        <div id="badge-counter" class="header-badge" title="Consultas restantes hoy" role="status" aria-live="polite">
+          <span id="counter-text">Te quedan 15<span class="badge-long"> consultas</span></span>
+        </div>
+        <button class="btn-close-modal" id="btn-close-chat" type="button" aria-label="Cerrar chat" title="Cerrar chat">
+          <svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-close"></use></svg>
+        </button>
+      </div>
     </div>
 
     <!-- Chat Stream -->
-    <div class="hub-stream" id="stream">
+    <div class="hub-stream" id="stream" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversación">
       <div class="msg-box bot">
-        <div class="msg-sender">🤖 Asistente Virtual</div>
+        <div class="msg-sender">Asistente Virtual</div>
         <div class="msg-bubble">
-          ¡Hola! Bienvenido a <strong>YOINTI LATAM</strong> 👋. Nos especializamos en transformar organizaciones mediante Branding, Marketing de alto impacto y Desarrollo de Software e IA.
+          ¡Hola! Bienvenido a <strong>YOINTI LATAM</strong>. Creamos soluciones de marca, tecnología y automatización para hacer crecer tu negocio.
           <br><br>
-          Explora nuestros servicios clave o escribe tu consulta:
+          Explora nuestros servicios o cuéntame qué necesitas:
         </div>
 
         <!-- Carousel horizontal de servicios -->
         <div class="cards-carousel">
           <div class="service-card">
-            <div class="card-icon">🎨</div>
+            <div class="card-icon"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-palette"></use></svg></div>
             <div class="card-title">Branding e Identidad</div>
             <div class="card-desc">Brand strategy, manual corporativo y diseño visual.</div>
             <div class="card-price">A medida</div>
-            <button class="btn-card-action" onclick="preguntar('Quiero información y propuesta sobre Branding e Identidad')">Consultar</button>
+        <button type="button" class="btn-card-action" onclick="preguntar('Quiero información y propuesta sobre Branding e Identidad')">Consultar</button>
           </div>
 
           <div class="service-card">
-            <div class="card-icon">💻</div>
+            <div class="card-icon"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-code"></use></svg></div>
             <div class="card-title">Desarrollo Web & Apps</div>
             <div class="card-desc">Landing pages, tiendas online y software a medida.</div>
             <div class="card-price">Alto rendimiento</div>
-            <button class="btn-card-action" onclick="preguntar('Quiero cotizar una página web o sistema a medida')">Consultar</button>
+        <button type="button" class="btn-card-action" onclick="preguntar('Quiero cotizar una página web o sistema a medida')">Consultar</button>
           </div>
 
           <div class="service-card">
-            <div class="card-icon">🤖</div>
+            <div class="card-icon"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-bot"></use></svg></div>
             <div class="card-title">Chatbots con IA</div>
             <div class="card-desc">Automatización comercial y atención 24/7 para WhatsApp y web.</div>
             <div class="card-price">Conversión 24/7</div>
-            <button class="btn-card-action" onclick="preguntar('Quiero implementar un Chatbot con Inteligencia Artificial')">Consultar</button>
+        <button type="button" class="btn-card-action" onclick="preguntar('Quiero implementar un Chatbot con Inteligencia Artificial')">Consultar</button>
           </div>
         </div>
       </div>
@@ -1063,29 +1290,48 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       </div>
     </div>
 
+    <!-- Dock inferior unificado: WhatsApp + chips + composer -->
+    <div class="hub-dock">
+    <!-- Shown only when the daily quota is exhausted (composer is hidden then). -->
+    <p class="hub-limit-note">Alcanzaste el límite de consultas de hoy. Vuelve mañana o continúa por WhatsApp.</p>
     <!-- Botón directo WhatsApp -->
     <div class="wa-strip">
       <a href="<?= WHATSAPP_URL ?>" target="_blank" class="btn-wa-hero" id="wa-hero-link">
-        <span>💬</span>
+        <svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-message-circle"></use></svg>
         <span>Hablar directo con un Asesor en WhatsApp</span>
       </a>
     </div>
 
     <!-- Chips de consulta sugeridos -->
-    <div class="quick-chips-wrap" id="quick-chips">
-      <button class="hub-chip" onclick="preguntar('¿Qué proyectos exitosos han realizado?')">🏆 Casos de Éxito</button>
-      <button class="hub-chip" onclick="preguntar('¿Cómo ayudan a aumentar las ventas?')">📈 Aumentar Ventas</button>
-      <button class="hub-chip" onclick="preguntar('¿Cuánto cuesta una página web?')">💼 Cotizaciones</button>
-      <button class="hub-chip" onclick="preguntar('¿Quién lidera el equipo de YoinTI?')">👥 Equipo</button>
+    <div class="quick-chips-section" id="quick-chips">
+      <div class="quick-chips-heading">
+        <span>Ideas para empezar</span>
+      </div>
+      <div class="quick-chips-wrap" role="group" aria-label="Preguntas sugeridas">
+        <button class="hub-chip" type="button" onclick="preguntar('¿Qué proyectos exitosos han realizado?')"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-trophy"></use></svg><span>Casos de Éxito</span></button>
+        <button class="hub-chip" type="button" onclick="preguntar('¿Cómo ayudan a aumentar las ventas?')"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-trending-up"></use></svg><span>Aumentar Ventas</span></button>
+        <button class="hub-chip" type="button" onclick="preguntar('¿Cuánto cuesta una página web?')"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-briefcase"></use></svg><span>Cotizaciones</span></button>
+        <button class="hub-chip" type="button" onclick="preguntar('¿Quién lidera el equipo de YoinTI?')"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-users"></use></svg><span>Equipo</span></button>
+      </div>
     </div>
 
     <!-- Input Footer -->
     <footer class="hub-footer">
-      <form id="hub-form" class="hub-input-group" onsubmit="return false;">
-        <input type="text" id="hub-input" class="hub-text-input" placeholder="Pregúntale al Asistente Virtual..." autocomplete="off">
-        <button type="submit" id="hub-submit" class="btn-hub-send">ENVIAR</button>
+      <form id="hub-form" class="hub-composer" onsubmit="return false;">
+        <div class="hub-input-group">
+          <textarea id="hub-input" class="hub-text-input" rows="1" maxlength="1000" aria-label="Escribe tu mensaje" placeholder="Pregúntale al Asistente Virtual..." autocomplete="off"></textarea>
+          <div class="hub-meta" id="hub-meta">
+            <span class="hub-counter" id="hub-counter" aria-hidden="true"></span>
+            <span class="hub-hint" id="hub-hint" hidden></span>
+          </div>
+        </div>
+        <span class="visually-hidden" id="hub-live" aria-live="polite"></span>
+        <button type="submit" id="hub-submit" class="btn-hub-send" aria-label="Enviar mensaje" title="Enviar mensaje" disabled>
+          <svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-send"></use></svg>
+        </button>
       </form>
     </footer>
+    </div>
   </div>
 
   <script>
@@ -1104,7 +1350,20 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
     const counterText = document.getElementById("counter-text");
     const hubForm = document.getElementById("hub-form");
     const quickChips = document.getElementById("quick-chips");
+    const counterEl = document.getElementById("hub-counter");
+    const hintEl = document.getElementById("hub-hint");
+    const liveEl = document.getElementById("hub-live");
 
+    const MAX_LEN = 1000;
+    const REQUEST_TIMEOUT_MS = 30000;
+    let isBusy = false;
+    // Shorter placeholder on very narrow screens so it never wraps/clips in the single-line field.
+    if (window.matchMedia("(max-width: 360px)").matches) input.placeholder = "Escribe tu consulta...";
+    let counterLevel = 0;
+    let hintTimer = null;
+
+    const conversationHistory = [];
+    const maxConversationMessages = 20;
     let isLocked = false;
     let whatsappUrl = "<?= WHATSAPP_URL ?>";
 
@@ -1113,17 +1372,104 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       const willOpen = (forceOpen !== null) ? forceOpen : modal.classList.contains("hidden");
       if (willOpen) {
         modal.classList.remove("hidden");
+        document.body.classList.add("chat-open");
         if (chatPill) chatPill.style.display = "none";
-        if (!isLocked) {
+        // Auto-focus only with a fine pointer: on touch it would pop the keyboard and hide the starter chips.
+        if (!isLocked && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
           setTimeout(() => input.focus(), 250);
         }
       } else {
         modal.classList.add("hidden");
+        document.body.classList.remove("chat-open");
       }
     }
 
+    function scrollToBottom() {
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    // Send button is enabled only with real text, no request in flight and no quota lock.
+    function syncSend() {
+      btnSubmit.disabled = isLocked || isBusy || input.value.trim() === "";
+    }
+
+    // Counter: hidden until 80% of the limit; the live region only speaks when a threshold is crossed.
+    function updateCounter() {
+      const len = input.value.length;
+      const level = len >= MAX_LEN ? 3 : len >= 950 ? 2 : len >= 800 ? 1 : 0;
+      counterEl.textContent = level ? len + "/" + MAX_LEN : "";
+      counterEl.dataset.level = String(level);
+      if (level !== counterLevel) {
+        counterLevel = level;
+        liveEl.textContent = level === 0 ? "" : level === 3
+          ? "Llegaste al límite de " + MAX_LEN + " caracteres"
+          : len + " de " + MAX_LEN + " caracteres";
+      }
+    }
+
+    function showTruncatedHint() {
+      const msg = "Tu mensaje se recortó a " + MAX_LEN + " caracteres";
+      hintEl.textContent = msg;
+      hintEl.hidden = false;
+      counterEl.hidden = true;
+      liveEl.textContent = msg;
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => {
+        hintEl.hidden = true;
+        counterEl.hidden = false;
+      }, 4000);
+    }
+
+    // Composer: auto-grow textarea (CSS caps the height, then it scrolls internally).
+    // Multi-line is always measured in the single-line layout so the state is deterministic (no flip-flop).
+    function resizeInput() {
+      hubForm.classList.remove("is-multiline");
+      input.style.height = "auto";
+      const cs = getComputedStyle(input);
+      const oneLine = (parseFloat(cs.lineHeight) || 0) + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      // An empty field is never multi-line (a wrapped placeholder would inflate scrollHeight).
+      const multi = input.value !== "" && (input.value.includes("\n") || (oneLine > 0 && input.scrollHeight > oneLine + 2));
+      hubForm.classList.toggle("is-multiline", multi);
+      if (multi) {
+        input.style.height = "auto";
+        input.style.height = input.scrollHeight + "px";
+      } else {
+        input.style.height = "";
+      }
+      updateCounter();
+      syncSend();
+    }
+    input.addEventListener("input", resizeInput);
+    input.addEventListener("paste", (e) => {
+      const pasted = (e.clipboardData && e.clipboardData.getData("text")) || "";
+      const selected = input.selectionEnd - input.selectionStart;
+      if (input.value.length - selected + pasted.length > MAX_LEN) showTruncatedHint();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        if (!btnSubmit.disabled) hubForm.requestSubmit();
+      }
+    });
+    // Keep the latest messages visible when the mobile keyboard opens.
+    input.addEventListener("focus", () => setTimeout(scrollToBottom, 300));
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => {
+        if (document.activeElement === input) scrollToBottom();
+      });
+    }
+
     btnToggle.addEventListener("click", () => toggleChat());
-    btnClose.addEventListener("click", () => toggleChat(false));
+    btnClose.addEventListener("click", () => {
+      toggleChat(false);
+      btnToggle.focus();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !e.isComposing && !modal.classList.contains("hidden")) {
+        toggleChat(false);
+        btnToggle.focus();
+      }
+    });
     if (chatPill) {
       chatPill.addEventListener("click", (e) => {
         if (e.target !== pillClose) toggleChat(true);
@@ -1158,22 +1504,23 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
     }
 
     function updateBadge(remaining, limit) {
-      if (remaining <= 0) {
+      // The ".badge-long" part is hidden visually at <=360px; full text stays in the title.
+      const n = Number(remaining);
+      if (n <= 0) {
         badgeCounter.className = "header-badge exhausted";
-        counterText.textContent = "0 / " + limit + " (Límite)";
-      } else if (remaining <= 3) {
-        badgeCounter.className = "header-badge warning";
-        counterText.textContent = remaining + " / " + limit + " hoy";
+        counterText.innerHTML = 'Sin consultas<span class="badge-long"> hoy</span>';
+        badgeCounter.title = "Sin consultas hoy";
       } else {
-        badgeCounter.className = "header-badge";
-        counterText.textContent = remaining + " / " + limit + " hoy";
+        badgeCounter.className = n <= 3 ? "header-badge warning" : "header-badge";
+        counterText.innerHTML = 'Te quedan ' + n + '<span class="badge-long"> consultas</span>';
+        badgeCounter.title = "Te quedan " + n + " consultas hoy";
       }
     }
 
     function lockInput(immediately = false) {
       isLocked = true;
       input.disabled = true;
-      btnSubmit.disabled = true;
+      syncSend();
       hubForm.classList.add("locked");
       input.placeholder = "Límite diario alcanzado. Continúa por WhatsApp.";
       if (quickChips) quickChips.style.display = "none";
@@ -1184,22 +1531,22 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       const b = document.createElement("div");
       b.className = "msg-box bot";
       b.innerHTML = `
-        <div class="msg-sender">🤖 Asistente Virtual</div>
+        <div class="msg-sender"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-bot"></use></svg> Asistente Virtual</div>
         <div class="msg-bubble">
-          ¡Has completado tus 15 consultas gratuitas de hoy! 🚀
+          ¡Has completado tus 15 consultas gratuitas de hoy!
           <br><br>
           Para continuar con tu atención comercial personalizada, resolver requerimientos técnicos o recibir una propuesta a medida, hablemos directamente por WhatsApp:
         </div>
         <div class="wa-cta-box">
           <div class="wa-cta-header">
-            <div class="wa-badge-icon">💬</div>
+            <div class="wa-badge-icon"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-message-circle"></use></svg></div>
             <div>
               <div class="wa-cta-title">Continuar Asesoría en WhatsApp</div>
               <div class="wa-cta-sub">Atención directa con nuestro equipo comercial</div>
             </div>
           </div>
           <a href="${waLink}" target="_blank" class="btn-wa-action">
-            <span>👉 Chatear en WhatsApp (+51 964 451 902)</span>
+            <span>Chatear en WhatsApp (+51 964 451 902)</span>
           </a>
         </div>
       `;
@@ -1208,9 +1555,10 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
     }
 
     function preguntar(txt) {
-      if (isLocked) return;
+      if (isLocked || isBusy) return;
       toggleChat(true);
       input.value = txt;
+      resizeInput();
       enviar();
     }
 
@@ -1219,33 +1567,82 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
       enviar();
     });
 
-    async function enviar() {
-      if (isLocked) return;
-      const q = input.value.trim();
-      if (!q) return;
+    function enviar() {
+      return send(input.value.trim());
+    }
 
-      // Mensaje del usuario
+    // The starter chips are only an aid for the first message.
+    function hideChips() {
+      if (quickChips) quickChips.style.display = "none";
+    }
+
+    async function send(q) {
+      if (isLocked || isBusy || !q) return;
+      if (q.length > MAX_LEN) q = q.slice(0, MAX_LEN);
+
+      // Offline: keep the text and tell the user, without touching the quota.
+      if (navigator.onLine === false) {
+        if (input.value.trim() === "") { input.value = q; resizeInput(); }
+        removeErrors();
+        showError("Parece que no tienes conexión a internet. Revisa tu red y vuelve a intentarlo.", q);
+        scrollToBottom();
+        return;
+      }
+
+      isBusy = true;
+      input.readOnly = true; // keeps focus (and the mobile keyboard) while the request is in flight
+      removeErrors();
+
       const u = document.createElement("div");
       u.className = "msg-box user";
       u.innerHTML = `<div class="msg-sender">Tú</div><div class="msg-bubble">${escapeHtml(q)}</div>`;
       stream.insertBefore(u, typing);
 
-      input.value = '';
-      input.disabled = true;
-      btnSubmit.disabled = true;
+      if (input.value.trim() === q) {
+        input.value = "";
+        resizeInput();
+      }
+      hideChips();
+      syncSend();
       typing.style.display = "flex";
-      stream.scrollTop = stream.scrollHeight;
+      scrollToBottom();
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      let failure = null;
 
       try {
         const res = await fetch("api/chat.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ mensaje: q })
+          body: new URLSearchParams({
+            mensaje: q,
+            historial: JSON.stringify(conversationHistory)
+          }),
+          signal: controller.signal
         });
-        const d = await res.json();
+        let d = null;
+        try {
+          d = await res.json();
+        } catch (parseErr) {
+          d = null;
+        }
 
-        if (d.success) {
+        if (!d || typeof d !== "object") {
+          failure = "Recibimos una respuesta inesperada del servidor. Inténtalo de nuevo en unos segundos.";
+        } else if (d.success) {
           updateBadge(d.remaining, d.limit);
+
+          const responseText = d.respuesta || "Sin respuesta";
+          if (!d.limited) {
+            conversationHistory.push(
+              { role: "user", parts: [{ text: q }] },
+              { role: "model", parts: [{ text: responseText }] }
+            );
+            if (conversationHistory.length > maxConversationMessages) {
+              conversationHistory.splice(0, conversationHistory.length - maxConversationMessages);
+            }
+          }
 
           const b = document.createElement("div");
           b.className = "msg-box bot";
@@ -1255,22 +1652,22 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
             ctaHtml = `
               <div class="wa-cta-box">
                 <div class="wa-cta-header">
-                  <div class="wa-badge-icon">💬</div>
+                  <div class="wa-badge-icon"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-message-circle"></use></svg></div>
                   <div>
                     <div class="wa-cta-title">${escapeHtml(d.whatsapp_cta.title)}</div>
                     <div class="wa-cta-sub">${escapeHtml(d.whatsapp_cta.subtitle || 'Atención directa')}</div>
                   </div>
                 </div>
                 <a href="${d.whatsapp_cta.url}" target="_blank" class="btn-wa-action">
-                  <span>👉 ${escapeHtml(d.whatsapp_cta.button_text)}</span>
+                  <span>${escapeHtml(d.whatsapp_cta.button_text)}</span>
                 </a>
               </div>
             `;
           }
 
           b.innerHTML = `
-            <div class="msg-sender">🤖 Asistente Virtual</div>
-            <div class="msg-bubble">${formatMessage(d.respuesta || "Sin respuesta")}</div>
+            <div class="msg-sender"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-bot"></use></svg> Asistente Virtual</div>
+            <div class="msg-bubble">${formatMessage(responseText)}</div>
             ${ctaHtml}
           `;
           stream.insertBefore(b, typing);
@@ -1280,25 +1677,62 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
             lockInput();
           }
         } else {
-          showError(d.error || "Ocurrió un error al procesar tu solicitud.");
+          failure = d.error || "Ocurrió un error al procesar tu solicitud.";
         }
       } catch (err) {
-        showError("Error de conexión con el servidor. Por favor, reintenta.");
+        failure = err && err.name === "AbortError"
+          ? "La respuesta está tardando más de lo normal. Inténtalo de nuevo en un momento."
+          : "No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.";
       } finally {
-        typing.style.display = "none";
-        if (!isLocked) {
-          input.disabled = false;
-          btnSubmit.disabled = false;
-          input.focus();
-        }
-        stream.scrollTop = stream.scrollHeight;
+        clearTimeout(timer);
       }
+
+      typing.style.display = "none";
+      isBusy = false;
+      input.readOnly = false;
+
+      if (failure) {
+        // Never lose the typed message: take the bubble back and restore the text.
+        u.remove();
+        if (!isLocked && input.value.trim() === "") {
+          input.value = q;
+          resizeInput();
+        }
+        showError(failure, q);
+      }
+
+      if (!isLocked) {
+        input.disabled = false;
+        // Do not pop the mobile keyboard after a chip tap; keep focus where it already was.
+        const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+        if (finePointer || document.activeElement === input) input.focus();
+      }
+      syncSend();
+      scrollToBottom();
     }
 
-    function showError(msg) {
+    function removeErrors() {
+      stream.querySelectorAll(".msg-error").forEach((el) => el.remove());
+    }
+
+    function showError(msg, retryText) {
       const errDiv = document.createElement("div");
-      errDiv.className = "msg-box bot";
-      errDiv.innerHTML = `<div class="msg-sender">⚠️ Sistema</div><div class="msg-bubble" style="color:#fca5a5; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.35);">⚠️ ${escapeHtml(msg)}</div>`;
+      errDiv.className = "msg-box bot msg-error";
+      errDiv.innerHTML = `<div class="msg-sender"><svg class="chat-icon" aria-hidden="true" focusable="false"><use href="#yointi-icon-alert"></use></svg> Sistema</div><div class="msg-bubble" style="color:#fca5a5; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.35);"><span class="msg-error-text"></span></div>`;
+      errDiv.querySelector(".msg-error-text").textContent = msg;
+      if (retryText) {
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "btn-retry";
+        retry.textContent = "Reintentar";
+        retry.addEventListener("click", () => {
+          if (isBusy || isLocked) return;
+          errDiv.remove();
+          send(retryText);
+        });
+        errDiv.querySelector(".msg-bubble").appendChild(document.createElement("br"));
+        errDiv.querySelector(".msg-bubble").appendChild(retry);
+      }
       stream.insertBefore(errDiv, typing);
     }
 
