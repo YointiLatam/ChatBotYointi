@@ -96,9 +96,6 @@ if (mb_strlen($pregunta, 'UTF-8') > 1000) {
 }
 $contents = ConversationHistory::buildContents($rawHistory, $pregunta);
 
-// 4. Verificación de Rate Limiting por IP (15 consultas por día)
-$check = RateLimiter::checkLimit($ip);
-
 $waCard = [
     'show' => true,
     'title' => 'Continuar Asesoría por WhatsApp',
@@ -108,29 +105,38 @@ $waCard = [
     'button_text' => 'Chatear en WhatsApp (+51 964 451 902)'
 ];
 
-if (!$check['allowed']) {
-    // Límite diario de 15 superado: derivar inmediatamente a WhatsApp sin consumir IA
+// 5. Reserve the slot atomically; it is only consumed if Gemini answers live.
+$reservation = RateLimiter::reserve($ip);
+if (!$reservation['allowed']) {
     echo json_encode([
         'success' => true,
         'limited' => true,
         'remaining' => 0,
-        'current' => $check['current'],
-        'limit' => $check['limit'],
+        'current' => $reservation['current'],
+        'limit' => $reservation['limit'],
         'respuesta' => "¡Has alcanzado el límite de 15 consultas gratuitas por hoy! 🚀\n\nPara continuar tu asesoría personalizada, recibir cotizaciones exactas y resolver cualquier requerimiento de tu negocio, hablemos directamente por WhatsApp con nuestro equipo.",
         'whatsapp_cta' => $waCard
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// 5. Registrar el consumo de la consulta
-$recorded = RateLimiter::recordQuery($ip);
-$currentCount = $recorded['current'];
-$remainingCount = $recorded['remaining'];
-$isLastQuery = ($currentCount >= $recorded['limit']);
-
 // 6. Consultar a la Asesora Comercial Virtual (Prompt v1.1.3)
-$aiResult = GeminiClient::ask($pregunta, $contents);
+$slotConfirmed = false;
+try {
+    $aiResult = GeminiClient::ask($pregunta, $contents);
+    // Simulated fallback answers do not count against the daily quota.
+    $slotConfirmed = empty($aiResult['simulated']);
+} finally {
+    if ($reservation['reserved'] && !$slotConfirmed) {
+        RateLimiter::release($ip, $reservation['date']);
+    }
+}
 $respuesta = $aiResult['text'];
+
+$state = RateLimiter::confirm($ip);
+$currentCount = $state['current'];
+$remainingCount = $state['remaining'];
+$isLastQuery = $slotConfirmed && ($currentCount >= $state['limit']);
 
 // Si acaba de consumir su consulta número 15, agregar nota cordial y tarjeta de WhatsApp
 if ($isLastQuery) {
@@ -142,7 +148,7 @@ echo json_encode([
     'limited' => false,
     'limited_now' => $isLastQuery,
     'current' => $currentCount,
-    'limit' => $recorded['limit'],
+    'limit' => $state['limit'],
     'remaining' => $remainingCount,
     'respuesta' => $respuesta,
     'simulado' => $aiResult['simulated'],
