@@ -1,15 +1,26 @@
 # .htaccess raíz - Protección de archivos privados y de configuración
+# On shared hosting (Hostinger) the subdomain root lives inside public_html, so the whole
+# project is under the web root: only public/ is exposed and everything else stays unreachable.
 
 Options -Indexes
 
 # Bloquear acceso a archivos sensibles
-<FilesMatch "^\.env|\.sqlite|\.json$|\.txt$|\.bat$|\.log$|\.md$">
+<FilesMatch "^\.|\.sqlite|\.json$|\.txt$|\.bat$|\.log$|\.md$">
     Order allow,deny
     Deny from all
 </FilesMatch>
 
-# Proteger carpetas privadas
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(backend|data|prompts)/ - [F,L,NC]
+
+    # Proteger carpetas privadas y archivos ocultos
+    RewriteRule ^(backend|data|prompts|tests)/ - [F,L,NC]
+    RewriteRule (^|/)\. - [F,L]
+
+    # Requests already inside public/ are served as-is.
+    RewriteRule ^public/ - [L]
+
+    # Everything else is mapped into public/ (e.g. /api/chat.php -> public/api/chat.php),
+    # so api/ and the rest of the root are never reachable directly.
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>

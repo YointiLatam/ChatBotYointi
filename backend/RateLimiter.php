@@ -114,70 +114,102 @@ class RateLimiter {
     }
 
     /**
-     * Registra una nueva consulta para la IP indicada y devuelve el nuevo estado.
-     * 
-     * @param string|null $ip
-     * @return array
+     * Points the limiter at another SQLite file (used by tests for isolation).
      */
-    public static function recordQuery($ip = null) {
+    public static function useDatabase($path) {
+        self::$sqliteFile = $path;
+        self::$pdo = null;
+    }
+
+    /**
+     * Atomically reserves one slot for the IP if the daily limit is not reached.
+     * The stored count is "confirmed + in-flight" slots, so concurrent requests
+     * can never exceed the limit. Call confirm() or release() afterwards.
+     *
+     * @param string|null $ip
+     * @return array status plus 'reserved' (bool) and 'date' of the reservation
+     */
+    public static function reserve($ip = null) {
         $ip = $ip ?: self::getClientIp();
         $today = date('Y-m-d');
         $limit = MAX_DAILY_QUERIES;
-        $now = date('Y-m-d H:i:s');
 
         try {
             $db = self::getDb();
 
-            // Inserción o actualización atómica (UPSERT nativo en SQLite 3.24+)
+            // Single statement: the WHERE clause makes the check and the increment atomic.
             $stmt = $db->prepare("
                 INSERT INTO rate_limits (ip, query_date, count, last_query_at)
                 VALUES (:ip, :today, 1, :now)
                 ON CONFLICT(ip, query_date) DO UPDATE SET
                     count = rate_limits.count + 1,
                     last_query_at = :now_update
+                WHERE rate_limits.count < :limit
             ");
             $stmt->execute([
                 ':ip' => $ip,
                 ':today' => $today,
-                ':now' => $now,
-                ':now_update' => $now
+                ':now' => date('Y-m-d H:i:s'),
+                ':now_update' => date('Y-m-d H:i:s'),
+                ':limit' => $limit
             ]);
+            $reserved = $stmt->rowCount() > 0;
 
-            // Obtener el conteo actualizado
-            $fetchStmt = $db->prepare("SELECT count FROM rate_limits WHERE ip = :ip AND query_date = :today");
-            $fetchStmt->execute([':ip' => $ip, ':today' => $today]);
-            $row = $fetchStmt->fetch();
-            $current = $row ? (int)$row['count'] : 1;
-
-            // Limpieza periódica de registros de más de 7 días (1 de cada 50 peticiones)
             if (mt_rand(1, 50) === 1) {
                 self::purgeOldEntries();
             }
 
-            $allowed = ($current <= $limit);
-            $remaining = max(0, $limit - $current);
-
-            return [
-                'ip' => $ip,
-                'allowed' => $allowed,
-                'current' => $current,
-                'limit' => $limit,
-                'remaining' => $remaining,
-                'is_now_limited' => ($current >= $limit),
-                'date' => $today
-            ];
+            $status = self::checkLimit($ip);
+            $status['reserved'] = $reserved;
+            $status['allowed'] = $reserved; // a concurrent release must not let an unreserved request through
+            return $status;
         } catch (Exception $e) {
-            error_log("RateLimiter recordQuery Error: " . $e->getMessage());
+            // Fail open like checkLimit(); nothing was reserved, so release() is a no-op.
+            error_log("RateLimiter reserve Error: " . $e->getMessage());
             return [
                 'ip' => $ip,
                 'allowed' => true,
-                'current' => 1,
+                'reserved' => false,
+                'current' => 0,
                 'limit' => $limit,
-                'remaining' => $limit - 1,
-                'is_now_limited' => false,
+                'remaining' => $limit,
                 'date' => $today
             ];
         }
+    }
+
+    /**
+     * Keeps a reserved slot (live answer delivered) and returns the current status.
+     * The slot is already counted, so this only reads the state.
+     */
+    public static function confirm($ip = null) {
+        return self::checkLimit($ip);
+    }
+
+    /**
+     * Gives back a slot obtained with reserve() (simulated answer or failure).
+     * Never decrements below zero. Call it only for a successful reservation.
+     *
+     * @param string|null $ip
+     * @param string|null $date Date returned by reserve(), to survive midnight rollover
+     * @return array
+     */
+    public static function release($ip = null, $date = null) {
+        $ip = $ip ?: self::getClientIp();
+        $date = $date ?: date('Y-m-d');
+
+        try {
+            $db = self::getDb();
+            $stmt = $db->prepare("
+                UPDATE rate_limits SET count = count - 1
+                WHERE ip = :ip AND query_date = :date AND count > 0
+            ");
+            $stmt->execute([':ip' => $ip, ':date' => $date]);
+        } catch (Exception $e) {
+            error_log("RateLimiter release Error: " . $e->getMessage());
+        }
+
+        return self::checkLimit($ip);
     }
 
     /**
