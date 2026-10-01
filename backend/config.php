@@ -52,6 +52,8 @@ define('GEMINI_MODEL', env('GEMINI_MODEL', 'gemini-3.5-flash-lite'));
 define('MAX_DAILY_QUERIES', (int)env('MAX_DAILY_QUERIES', 15));
 define('WHATSAPP_NUMBER', env('WHATSAPP_NUMBER', '51964451902'));
 define('WHATSAPP_DISPLAY', '+51 964 451 902');
+// Booking link for the scheduling flows; empty until a booking system exists (falls back to WhatsApp).
+define('CALENDLY_URL', env('CALENDLY_URL', ''));
 define('FALLBACK_DEMO_MODE', filter_var(env('FALLBACK_DEMO_MODE', 'true'), FILTER_VALIDATE_BOOLEAN));
 define('TRUST_CLOUDFLARE_PROXY', filter_var(env('TRUST_CLOUDFLARE_PROXY', 'false'), FILTER_VALIDATE_BOOLEAN));
 define('ALLOWED_ORIGINS', env('ALLOWED_ORIGINS', '*'));

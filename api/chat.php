@@ -13,6 +13,7 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 require_once __DIR__ . '/../backend/config.php';
 require_once __DIR__ . '/../backend/RateLimiter.php';
 require_once __DIR__ . '/../backend/GeminiClient.php';
+require_once __DIR__ . '/../backend/ConversationHistory.php';
 
 // Control de CORS configurable
 $allowedOrigin = defined('ALLOWED_ORIGINS') ? ALLOWED_ORIGINS : '*';
@@ -58,22 +59,30 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// 3. Extracción del mensaje
-$pregunta = '';
-if (isset($_POST['mensaje'])) {
-    $pregunta = trim($_POST['mensaje']);
-} else {
-    $rawInput = file_get_contents('php://input');
+// 3. Extract the current message and optional browser-provided history.
+$requestData = $_POST;
+if (!array_key_exists('mensaje', $requestData)) {
+    $rawInput = file_get_contents('php://input', false, null, 0, ConversationHistory::MAX_JSON_REQUEST_BYTES + 1);
+    if (strlen($rawInput) > ConversationHistory::MAX_JSON_REQUEST_BYTES) {
+        http_response_code(413);
+        echo json_encode(['success' => false, 'error' => 'La solicitud supera el tamaño permitido.']);
+        exit;
+    }
     if (!empty($rawInput)) {
         $json = json_decode($rawInput, true);
-        if (isset($json['mensaje'])) {
-            $pregunta = trim($json['mensaje']);
+        if (is_array($json)) {
+            $requestData = $json;
         }
     }
 }
 
+$messageValue = isset($requestData['mensaje']) ? $requestData['mensaje'] : null;
+$pregunta = is_string($messageValue) ? trim($messageValue) : '';
+$rawHistory = isset($requestData['historial']) ? $requestData['historial'] : null;
+
 $pregunta = str_replace("\0", '', $pregunta);
-$pregunta = trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $pregunta));
+$cleanedQuestion = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $pregunta);
+$pregunta = is_string($cleanedQuestion) ? trim($cleanedQuestion) : '';
 
 if ($pregunta === '') {
     http_response_code(400);
@@ -85,6 +94,7 @@ if ($pregunta === '') {
 if (mb_strlen($pregunta, 'UTF-8') > 1000) {
     $pregunta = mb_substr($pregunta, 0, 1000, 'UTF-8');
 }
+$contents = ConversationHistory::buildContents($rawHistory, $pregunta);
 
 // 4. Verificación de Rate Limiting por IP (15 consultas por día)
 $check = RateLimiter::checkLimit($ip);
@@ -119,7 +129,7 @@ $remainingCount = $recorded['remaining'];
 $isLastQuery = ($currentCount >= $recorded['limit']);
 
 // 6. Consultar a la Asesora Comercial Virtual (Prompt v1.1.3)
-$aiResult = GeminiClient::ask($pregunta);
+$aiResult = GeminiClient::ask($pregunta, $contents);
 $respuesta = $aiResult['text'];
 
 // Si acaba de consumir su consulta número 15, agregar nota cordial y tarjeta de WhatsApp
