@@ -335,7 +335,7 @@ if (file_exists(__DIR__ . '/backend/config.php')) {
   </section>
 
   <!-- Asistente Virtual: un único <script>; este demo usa el mismo tag que el sitio principal. -->
-  <script src="widget/yointi-chat.js?v=1.0.0" defer></script>
+  <script src="widget/yointi-chat.js?v=1.0.1" defer></script>
   <script>
     // El botón del hero abre el widget mediante su evento público (sin variables globales).
     document.getElementById("btn-hero-open-chat").addEventListener("click", function () {

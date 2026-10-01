@@ -1,7 +1,7 @@
 /*!
  * YOINTI LATAM - Asistente Virtual (widget embebible)
  *
- * Uso: <script src="https://chat.yointi.com/widget/yointi-chat.js?v=1.0.0" defer></script>
+ * Uso: <script src="https://chat.yointi.com/widget/yointi-chat.js?v=1.0.1" defer></script>
  *
  * - Todo vive en un Shadow DOM: los estilos del sitio no entran y los del widget no salen.
  * - No define variables globales (IIFE). Solo escucha el evento opcional "yointi-chat:open"
@@ -34,6 +34,57 @@
 
   var DEFAULT_WA_URL = "https://wa.me/51964451902";
   var DEFAULT_WA_DISPLAY = "+51 964 451 902";
+
+  // La conversacion se guarda en localStorage (persistente entre pestanas y sesiones) para que sobreviva a la
+  // navegacion entre paginas del sitio y al cierre del navegador; caduca tras 12 h sin actividad.
+  var STORAGE_KEY = "yointi-chat:v1";
+  var STATE_VERSION = 1;
+  var STATE_TTL_MS = 12 * 60 * 60 * 1000;
+  var MAX_STATE_CHARS = 60000;
+
+  function clearState() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* almacenamiento bloqueado */ }
+  }
+
+  // Devuelve { open, messages: [{ role, text }] } o null si no hay datos validos y vigentes.
+  function loadState() {
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
+    if (raw === null) return null;
+    var data = null;
+    try { data = JSON.parse(raw); } catch (e) { data = null; }
+    var valid = data && typeof data === "object" && data.v === STATE_VERSION &&
+      typeof data.ts === "number" && Array.isArray(data.messages) &&
+      Date.now() - data.ts >= 0 && Date.now() - data.ts < STATE_TTL_MS;
+    if (valid) {
+      for (var i = 0; i < data.messages.length; i++) {
+        var m = data.messages[i];
+        if (!m || (m.role !== "user" && m.role !== "model") || typeof m.text !== "string" || m.text === "") {
+          valid = false;
+          break;
+        }
+      }
+    }
+    if (!valid) { clearState(); return null; }
+    // El historial debe empezar con un mensaje del usuario (contrato con el servidor).
+    var messages = data.messages.slice();
+    while (messages.length && messages[0].role !== "user") messages.shift();
+    return messages.length ? { open: data.open === true, messages: messages } : null;
+  }
+
+  function saveState(messages, open) {
+    if (!messages.length) return;
+    try {
+      var list = messages.slice();
+      var payload;
+      for (;;) {
+        payload = JSON.stringify({ v: STATE_VERSION, ts: Date.now(), open: !!open, messages: list });
+        if (payload.length <= MAX_STATE_CHARS || list.length <= 2) break;
+        list.splice(0, 2); // descarta el intercambio mas antiguo (usuario + modelo)
+      }
+      localStorage.setItem(STORAGE_KEY, payload);
+    } catch (e) { /* almacenamiento bloqueado o lleno: el chat sigue solo en memoria */ }
+  }
 
   function mount() {
     // Protege contra doble inclusion del script.
@@ -128,21 +179,47 @@
       return !modal.classList.contains("hidden");
     }
 
-    function toggleChat(forceOpen) {
+    // noFocus: apertura automatica al restaurar; el foco debe quedarse en la pagina anfitriona.
+    function toggleChat(forceOpen, noFocus) {
       var willOpen = typeof forceOpen === "boolean" ? forceOpen : !isOpen();
       if (willOpen) {
         modal.classList.remove("hidden");
         root.classList.add("chat-open");
         chatPill.style.display = "none";
         // Foco: en escritorio al campo; en tactil al panel (evita abrir el teclado y tapar los chips).
-        setTimeout(function () {
-          if (!isLocked && isFinePointer()) input.focus();
-          else modal.focus();
-        }, 250);
+        if (!noFocus) {
+          setTimeout(function () {
+            if (!isLocked && isFinePointer()) input.focus();
+            else modal.focus();
+          }, 250);
+        }
       } else {
         modal.classList.add("hidden");
         root.classList.remove("chat-open");
       }
+      if (!noFocus) persistState(); // restaurar no debe renovar la marca de actividad
+    }
+
+    // Guarda la conversacion (si la hay) junto con el estado abierto/cerrado y renueva la marca de actividad.
+    function persistState() {
+      saveState(conversationHistory.map(function (m) {
+        return { role: m.role, text: m.parts[0].text };
+      }), isOpen());
+    }
+
+    // Vuelve a pintar una conversacion guardada con los mismos helpers del flujo en vivo.
+    function restoreConversation() {
+      var saved = loadState();
+      if (!saved) return;
+      saved.messages.slice(-MAX_CONVERSATION_MESSAGES).forEach(function (m) {
+        conversationHistory.push({ role: m.role, parts: [{ text: m.text }] });
+        if (m.role === "user") addUserBox(m.text);
+        else addBotBox('<div class="msg-bubble">' + formatMessage(m.text) + '</div>');
+      });
+      quickChips.style.display = "none"; // igual que tras el primer mensaje en vivo
+      chatPill.style.display = "none";   // visitante con conversacion: solo el lanzador
+      if (saved.open) toggleChat(true, true);
+      scrollToBottom();
     }
 
     function closeChat() {
@@ -259,6 +336,14 @@
       return b;
     }
 
+    function addUserBox(text) {
+      var u = document.createElement("div");
+      u.className = "msg-box user";
+      u.innerHTML = '<div class="msg-sender">Tú</div><div class="msg-bubble">' + escapeHtml(text) + '</div>';
+      stream.insertBefore(u, typing);
+      return u;
+    }
+
     function showLimitedNotice(url) {
       addBotBox(
         '<div class="msg-bubble">¡Has completado tus ' + escapeHtml(dailyLimit) + ' consultas gratuitas de hoy!<br><br>' +
@@ -332,10 +417,7 @@
       input.readOnly = true; // mantiene el foco (y el teclado movil) mientras dura la peticion
       removeErrors();
 
-      var u = document.createElement("div");
-      u.className = "msg-box user";
-      u.innerHTML = '<div class="msg-sender">Tú</div><div class="msg-bubble">' + escapeHtml(q) + '</div>';
-      stream.insertBefore(u, typing);
+      var u = addUserBox(q);
 
       if (input.value.trim() === q) {
         input.value = "";
@@ -382,6 +464,7 @@
             if (conversationHistory.length > MAX_CONVERSATION_MESSAGES) {
               conversationHistory.splice(0, conversationHistory.length - MAX_CONVERSATION_MESSAGES);
             }
+            persistState();
           }
 
           var ctaHtml = "";
@@ -485,6 +568,7 @@
     // API para el sitio anfitrion, sin globales: window.dispatchEvent(new CustomEvent("yointi-chat:open")).
     window.addEventListener("yointi-chat:open", function () { toggleChat(true); });
 
+    restoreConversation();
     checkStatus();
   }
 
