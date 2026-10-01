@@ -11,22 +11,16 @@ header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 
 require_once __DIR__ . '/../backend/config.php';
+require_once __DIR__ . '/../backend/Cors.php';
 require_once __DIR__ . '/../backend/RateLimiter.php';
 require_once __DIR__ . '/../backend/GeminiClient.php';
 require_once __DIR__ . '/../backend/ConversationHistory.php';
 
-// Control de CORS configurable
-$allowedOrigin = defined('ALLOWED_ORIGINS') ? ALLOWED_ORIGINS : '*';
-if ($allowedOrigin === '*') {
-    header("Access-Control-Allow-Origin: *");
-} elseif (!empty($_SERVER['HTTP_ORIGIN'])) {
-    $origins = array_map('trim', explode(',', $allowedOrigin));
-    if (in_array($_SERVER['HTTP_ORIGIN'], $origins, true)) {
-        header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
-    }
-}
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+// Control de CORS configurable (ALLOWED_ORIGINS: '*' o lista separada por comas)
+Cors::sendHeaders(
+    defined('ALLOWED_ORIGINS') ? ALLOWED_ORIGINS : '*',
+    isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : ''
+);
 
 // Manejo de peticiones preflight OPTIONS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

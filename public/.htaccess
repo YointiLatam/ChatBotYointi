@@ -16,3 +16,26 @@ Options -Indexes
     Order allow,deny
     Deny from all
 </FilesMatch>
+
+# Widget embebido (widget/yointi-chat.js): se carga desde otro dominio con <script src=".../yointi-chat.js?v=X">.
+# Cache corta + revalidacion: al cambiar ?v= el navegador pide el archivo nuevo, y sin cambiar ?v=
+# un despliegue se propaga en minutos. Las imagenes pueden cachearse mas tiempo.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/javascript "access plus 1 hour"
+    ExpiresByType text/javascript "access plus 1 hour"
+    ExpiresByType text/css "access plus 1 hour"
+    ExpiresByType image/png "access plus 7 days"
+    ExpiresByType image/jpeg "access plus 7 days"
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css)$">
+        Header set Cache-Control "public, max-age=3600, must-revalidate"
+        # Los assets son publicos y de solo lectura: cualquier sitio puede cargarlos.
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+    <FilesMatch "\.(png|jpe?g|svg|webp)$">
+        Header set Cache-Control "public, max-age=604800"
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
